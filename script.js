@@ -6,6 +6,9 @@ const radius = canvas.width / 2;
 const drawWidth = 8;
 const borderWidth = 4;
 let drawing = false;
+let paths;
+let mirrorPaths;
+const pathCount = 5;
 
 canvas.addEventListener("mousedown", event => {
 	startDrawing(getPosition(event));
@@ -40,8 +43,15 @@ function startDrawing(position) {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	drawBorder();
 	context.lineWidth = drawWidth;
-	context.beginPath();
-	context.moveTo(position.x, position.y);
+	paths = [];
+	mirrorPaths = [];
+	for (let index = 0; index < pathCount; index++) {
+		const rotatedPosition = getRotatedPosition(position, index);
+		paths.push(new Path2D());
+		paths[index].moveTo(rotatedPosition.x, rotatedPosition.y);
+		mirrorPaths.push(new Path2D());
+		mirrorPaths[index].moveTo(getFlippedX(rotatedPosition.x), rotatedPosition.y);
+	}
 }
 
 function drawBorder() {
@@ -57,8 +67,13 @@ function draw(position) {
 	if (!inCircle(position)) {
 		return;
 	}
-	context.lineTo(position.x, position.y);
-	context.stroke();
+	for (let index = 0; index < pathCount; index++) {
+		const rotatedPosition = getRotatedPosition(position, index);
+		paths[index].lineTo(rotatedPosition.x, rotatedPosition.y);
+		context.stroke(paths[index]);
+		mirrorPaths[index].lineTo(getFlippedX(rotatedPosition.x), rotatedPosition.y);
+		context.stroke(mirrorPaths[index]);
+	}
 }
 
 function getPosition(event) {
@@ -66,6 +81,21 @@ function getPosition(event) {
 	const x = (event.clientX - canvas.offsetLeft) * scale;
 	const y = (event.clientY - canvas.offsetTop) * scale;
 	return { x, y };
+}
+
+function getRotatedPosition(position, index) {
+	const rotation = Math.PI * 2 / pathCount * index;
+	const cos = Math.cos(rotation);
+	const sin = Math.sin(rotation);
+	const ox = position.x - center.x;
+	const oy = position.y - center.y;
+	const x = ox * cos - oy * sin + center.x;
+	const y = oy * cos + ox * sin + center.y;
+	return { x, y };
+}
+
+function getFlippedX(x) {
+	return canvas.width - x;
 }
 
 function inCircle(position) {
