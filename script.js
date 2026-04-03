@@ -78,8 +78,8 @@ function draw(position) {
 
 function getPosition(event) {
 	const scale = canvas.width / canvas.clientWidth;
-	const x = (event.clientX - canvas.offsetLeft) * scale;
-	const y = (event.clientY - canvas.offsetTop) * scale;
+	const x = (event.clientX - canvas.offsetLeft + window.scrollX) * scale;
+	const y = (event.clientY - canvas.offsetTop + window.scrollY) * scale;
 	return { x, y };
 }
 

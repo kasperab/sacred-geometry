@@ -1,0 +1,17 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+
+.container {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	@media (max-width: 130vh) {
+		grid-template-columns: 1fr;
+	}
+}
+
+canvas {
+	max-height: 100vh;
+	max-width: 100vw;
+}
