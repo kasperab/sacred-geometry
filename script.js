@@ -1,17 +1,24 @@
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 const clearButton = document.getElementById("clearButton");
+const pngButton = document.getElementById("pngButton");
 
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
 const radius = canvas.width / 2;
 const drawWidth = 8;
-let color = "white";
 const borderWidth = 4;
+const black = "black";
+const white = "white";
 let canDraw = true;
 let drawing = false;
 let paths;
 let mirrorPaths;
 const pathCount = 5;
+
+context.strokeStyle = white;
+context.fillStyle = black;
+clearButton.disabled = canDraw;
+pngButton.disabled = canDraw;
 
 canvas.addEventListener("mousedown", event => {
 	startDrawing(getPosition(event));
@@ -67,12 +74,12 @@ function stopDrawing() {
 	canDraw = false;
 	drawing = false;
 	clearButton.disabled = false;
+	pngButton.disabled = false;
 	reDraw();
 }
 
 function drawBorder() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.strokeStyle = color;
 	context.lineWidth = borderWidth;
 	context.beginPath();
 	context.arc(center.x, center.y, radius - borderWidth / 2, 0, Math.PI * 2);
@@ -96,7 +103,6 @@ function draw(position) {
 
 function reDraw() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	context.strokeStyle = color;
 	context.lineWidth = drawWidth;
 	for (let index = 0; index < paths.length; index++) {
 		context.stroke(paths[index]);
@@ -133,10 +139,12 @@ function inCircle(position) {
 function toggleColors() {
 	if (document.body.className === "dark") {
 		document.body.className = "light";
-		color = "black";
+		context.strokeStyle = black;
+		context.fillStyle = white;
 	} else {
 		document.body.className = "dark";
-		color = "white";
+		context.strokeStyle = white;
+		context.fillStyle = black;
 	}
 	if (canDraw) {
 		drawBorder();
@@ -148,5 +156,18 @@ function toggleColors() {
 function clearDrawing() {
 	canDraw = true;
 	clearButton.disabled = true;
+	pngButton.disabled = true;
 	drawBorder();
+}
+
+function savePNG() {
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	for (let index = 0; index < paths.length; index++) {
+		context.stroke(paths[index]);
+		context.stroke(mirrorPaths[index]);
+	}
+	const link = document.createElement("a");
+	link.href = canvas.toDataURL();
+	link.download = "image.png";
+	link.click();
 }
