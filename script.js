@@ -21,7 +21,9 @@ clearButton.disabled = canDraw;
 pngButton.disabled = canDraw;
 
 canvas.addEventListener("mousedown", event => {
-	startDrawing(getPosition(event));
+	if (event.button === 0) {
+		startDrawing(getPosition(event));
+	}
 });
 canvas.addEventListener("touchstart", event => {
 	startDrawing(getPosition(event.touches[0]));
