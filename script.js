@@ -1,11 +1,13 @@
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
+const clearButton = document.getElementById("clearButton");
 
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
 const radius = canvas.width / 2;
 const drawWidth = 8;
 let color = "white";
 const borderWidth = 4;
+let canDraw = true;
 let drawing = false;
 let paths;
 let mirrorPaths;
@@ -18,8 +20,16 @@ canvas.addEventListener("touchstart", event => {
 	startDrawing(getPosition(event.touches[0]));
 });
 
-document.addEventListener("mouseup", () => drawing = false);
-document.addEventListener("touchend", () => drawing = false);
+document.addEventListener("mouseup", () => {
+	if (drawing) {
+		stopDrawing();
+	}
+});
+document.addEventListener("touchend", () => {
+	if (drawing) {
+		stopDrawing();
+	}
+});
 
 canvas.addEventListener("mousemove", event => {
 	if (drawing) {
@@ -34,15 +44,13 @@ canvas.addEventListener("touchmove", event => {
 	}
 });
 
-reDraw();
+drawBorder();
 
 function startDrawing(position) {
-	if (!inCircle(position)) {
+	if (!canDraw || !inCircle(position)) {
 		return;
 	}
 	drawing = true;
-	context.clearRect(0, 0, canvas.width, canvas.height);
-	drawBorder();
 	context.lineWidth = drawWidth;
 	paths = [];
 	mirrorPaths = [];
@@ -55,7 +63,16 @@ function startDrawing(position) {
 	}
 }
 
+function stopDrawing() {
+	canDraw = false;
+	drawing = false;
+	clearButton.disabled = false;
+	reDraw();
+}
+
 function drawBorder() {
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.strokeStyle = color;
 	context.lineWidth = borderWidth;
 	context.beginPath();
 	context.arc(center.x, center.y, radius - borderWidth / 2, 0, Math.PI * 2);
@@ -78,9 +95,8 @@ function draw(position) {
 }
 
 function reDraw() {
-	context.strokeStyle = color;
 	context.clearRect(0, 0, canvas.width, canvas.height);
-	drawBorder();
+	context.strokeStyle = color;
 	context.lineWidth = drawWidth;
 	for (let index = 0; index < paths.length; index++) {
 		context.stroke(paths[index]);
@@ -122,5 +138,15 @@ function toggleColors() {
 		document.body.className = "dark";
 		color = "white";
 	}
-	reDraw();
+	if (canDraw) {
+		drawBorder();
+	} else {
+		reDraw();
+	}
+}
+
+function clearDrawing() {
+	canDraw = true;
+	clearButton.disabled = true;
+	drawBorder();
 }
