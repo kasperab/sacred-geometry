@@ -14,6 +14,10 @@ let drawing = false;
 let paths;
 let mirrorPaths;
 const pathCount = 5;
+const frameCount = 100;
+const frameTime = 20;
+let frame;
+let intervalID;
 
 context.strokeStyle = white;
 context.fillStyle = black;
@@ -63,7 +67,7 @@ function startDrawing(position) {
 	context.lineWidth = drawWidth;
 	paths = [];
 	mirrorPaths = [];
-	for (let index = 0; index < pathCount; index++) {
+	for (let index = 0; index < pathCount * frameCount; index++) {
 		const rotatedPosition = getRotatedPosition(position, index);
 		paths.push(new Path2D());
 		paths[index].moveTo(rotatedPosition.x, rotatedPosition.y);
@@ -77,6 +81,8 @@ function stopDrawing() {
 	drawing = false;
 	clearButton.disabled = false;
 	pngButton.disabled = false;
+	frame = 0;
+	intervalID = setInterval(nextFrame, frameTime);
 	reDraw();
 }
 
@@ -94,19 +100,29 @@ function draw(position) {
 	if (!inCircle(position)) {
 		return;
 	}
-	for (let index = 0; index < pathCount; index++) {
+	for (let index = 0; index < paths.length; index++) {
 		const rotatedPosition = getRotatedPosition(position, index);
 		paths[index].lineTo(rotatedPosition.x, rotatedPosition.y);
-		context.stroke(paths[index]);
 		mirrorPaths[index].lineTo(getFlippedX(rotatedPosition.x), rotatedPosition.y);
+	}
+	for (let index = 0; index < paths.length; index += frameCount) {
+		context.stroke(paths[index]);
 		context.stroke(mirrorPaths[index]);
 	}
+}
+
+function nextFrame() {
+	frame++;
+	if (frame >= frameCount) {
+		frame = 0;
+	}
+	reDraw();
 }
 
 function reDraw() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	context.lineWidth = drawWidth;
-	for (let index = 0; index < paths.length; index++) {
+	for (let index = frame; index < paths.length; index += frameCount) {
 		context.stroke(paths[index]);
 		context.stroke(mirrorPaths[index]);
 	}
@@ -120,7 +136,7 @@ function getPosition(event) {
 }
 
 function getRotatedPosition(position, index) {
-	const rotation = Math.PI * 2 / pathCount * index;
+	const rotation = Math.PI * 2 / (pathCount * frameCount) * index;
 	const cos = Math.cos(rotation);
 	const sin = Math.sin(rotation);
 	const ox = position.x - center.x;
@@ -159,12 +175,13 @@ function clearDrawing() {
 	canDraw = true;
 	clearButton.disabled = true;
 	pngButton.disabled = true;
+	clearInterval(intervalID);
 	drawBorder();
 }
 
 function savePNG() {
 	context.fillRect(0, 0, canvas.width, canvas.height);
-	for (let index = 0; index < paths.length; index++) {
+	for (let index = 0; index < paths.length; index += frameCount) {
 		context.stroke(paths[index]);
 		context.stroke(mirrorPaths[index]);
 	}
