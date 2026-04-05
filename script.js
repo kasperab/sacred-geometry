@@ -2,6 +2,7 @@ const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 const clearButton = document.getElementById("clearButton");
 const pngButton = document.getElementById("pngButton");
+const gifButton = document.getElementById("gifButton");
 
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
 const radius = canvas.width / 2;
@@ -14,8 +15,8 @@ let drawing = false;
 let paths;
 let mirrorPaths;
 const pathCount = 5;
-const frameCount = 100;
-const frameTime = 20;
+const frameCount = 50;
+const frameTime = 40;
 let frame;
 let intervalID;
 
@@ -23,6 +24,7 @@ context.strokeStyle = white;
 context.fillStyle = black;
 clearButton.disabled = canDraw;
 pngButton.disabled = canDraw;
+gifButton.disabled = canDraw;
 
 canvas.addEventListener("mousedown", event => {
 	if (event.button === 0) {
@@ -81,6 +83,7 @@ function stopDrawing() {
 	drawing = false;
 	clearButton.disabled = false;
 	pngButton.disabled = false;
+	gifButton.disabled = false;
 	frame = 0;
 	intervalID = setInterval(nextFrame, frameTime);
 	reDraw();
@@ -175,6 +178,7 @@ function clearDrawing() {
 	canDraw = true;
 	clearButton.disabled = true;
 	pngButton.disabled = true;
+	gifButton.disabled = true;
 	clearInterval(intervalID);
 	drawBorder();
 }
@@ -187,6 +191,32 @@ function savePNG() {
 	}
 	const link = document.createElement("a");
 	link.href = canvas.toDataURL();
-	link.download = "image.png";
+	link.download = "mandala.png";
 	link.click();
+}
+
+function saveGIF() {
+	gifButton.disabled = true;
+	const gif = new GIF({
+		width: canvas.width,
+		height: canvas.height
+	});
+	for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		for (let pathIndex = frameIndex; pathIndex < paths.length; pathIndex += frameCount) {
+			context.stroke(paths[pathIndex]);
+			context.stroke(mirrorPaths[pathIndex]);
+		}
+		gif.addFrame(context, {copy:true, delay: frameTime});
+	}
+	gif.on("finished", blob => {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "mandala.gif";
+		link.click();
+		URL.revokeObjectURL(url);
+		gifButton.disabled = false;
+	});
+	gif.render();
 }
