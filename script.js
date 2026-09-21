@@ -3,6 +3,8 @@ const context = canvas.getContext("2d");
 const clearButton = document.getElementById("clearButton");
 const pngButton = document.getElementById("pngButton");
 const gifButton = document.getElementById("gifButton");
+const printButton = document.getElementById("printButton");
+const printImage = document.getElementById("printImage");
 
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
 const radius = canvas.width / 2;
@@ -25,6 +27,18 @@ context.fillStyle = black;
 clearButton.disabled = canDraw;
 pngButton.disabled = canDraw;
 gifButton.disabled = canDraw;
+printButton.disabled = canDraw;
+
+printImage.setAttribute("width", canvas.width);
+printImage.setAttribute("height", canvas.height);
+const printPaths = [];
+for (let index = 0; index < pathCount * 2; index++) {
+	printPaths.push(document.createElementNS("http://www.w3.org/2000/svg", "path"));
+	printPaths[index].setAttribute("stroke", black);
+	printPaths[index].setAttribute("stroke-width", drawWidth);
+	printPaths[index].setAttribute("fill", "none");
+	printImage.appendChild(printPaths[index]);
+}
 
 canvas.addEventListener("mousedown", event => {
 	if (event.button === 0) {
@@ -74,7 +88,13 @@ function startDrawing(position) {
 		paths.push(new Path2D());
 		paths[index].moveTo(rotatedPosition.x, rotatedPosition.y);
 		mirrorPaths.push(new Path2D());
-		mirrorPaths[index].moveTo(getFlippedX(rotatedPosition.x), rotatedPosition.y);
+		const flippedX = getFlippedX(rotatedPosition.x);
+		mirrorPaths[index].moveTo(flippedX, rotatedPosition.y);
+		if (index % frameCount === 0) {
+			const printIndex = Math.floor(index / frameCount);
+			printPaths[printIndex].setAttribute("d", "M " + rotatedPosition.x + " " + rotatedPosition.y);
+			printPaths[printIndex + pathCount].setAttribute("d", "M " + flippedX + " " + rotatedPosition.y);
+		}
 	}
 }
 
@@ -84,6 +104,7 @@ function stopDrawing() {
 	clearButton.disabled = false;
 	pngButton.disabled = false;
 	gifButton.disabled = false;
+	printButton.disabled = false;
 	frame = 0;
 	intervalID = setInterval(nextFrame, frameTime);
 	reDraw();
@@ -106,7 +127,15 @@ function draw(position) {
 	for (let index = 0; index < paths.length; index++) {
 		const rotatedPosition = getRotatedPosition(position, index);
 		paths[index].lineTo(rotatedPosition.x, rotatedPosition.y);
-		mirrorPaths[index].lineTo(getFlippedX(rotatedPosition.x), rotatedPosition.y);
+		const flippedX = getFlippedX(rotatedPosition.x);
+		mirrorPaths[index].lineTo(flippedX, rotatedPosition.y);
+		if (index % frameCount === 0) {
+			const printIndex = Math.floor(index / frameCount);
+			let d = printPaths[printIndex].attributes.d.value;
+			printPaths[printIndex].setAttribute("d", d + "L " + rotatedPosition.x + " " + rotatedPosition.y);
+			d = printPaths[printIndex + pathCount].attributes.d.value;
+			printPaths[printIndex + pathCount].setAttribute("d", d + "L " + flippedX + " " + rotatedPosition.y);
+		}
 	}
 	for (let index = 0; index < paths.length; index += frameCount) {
 		context.stroke(paths[index]);
@@ -179,6 +208,7 @@ function clearDrawing() {
 	clearButton.disabled = true;
 	pngButton.disabled = true;
 	gifButton.disabled = true;
+	printButton.disabled = true;
 	clearInterval(intervalID);
 	drawBorder();
 }

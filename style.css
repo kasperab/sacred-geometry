@@ -67,3 +67,21 @@ p, button, br {
 a {
 	color: inherit;
 }
+
+svg {
+	display: none;
+}
+
+@media print {
+	.dark {
+		background-color: white;
+	}
+
+	.container {
+		display: none;
+	}
+
+	svg {
+		display: block;
+	}
+}
